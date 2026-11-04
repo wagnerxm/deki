@@ -1,0 +1,23 @@
+{
+  "name": "Deki",
+  "short_name": "Deki",
+  "description": "Agenda pessoal: o dia como uma linha que você percorre.",
+  "lang": "pt-BR",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0D1319",
+  "theme_color": "#0D1319",
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Próxima tarefa", "short_name": "Próxima", "description": "Só a próxima tarefa e o botão Iniciar", "url": "./index.html?mini=1", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Nova tarefa", "short_name": "Nova", "description": "Abre a captura em português", "url": "./index.html?nova=1", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Monta meu dia", "short_name": "Monta", "description": "Proposta do dia inteiro para aceitar", "url": "./index.html?monta=1", "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

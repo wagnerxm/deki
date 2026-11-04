@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0D1319">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Deki">
+<title>Deki</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/deki.css">
+<link rel="stylesheet" href="css/features.css">
+</head>
+<body>
+<div id="app" class="app">
+
+  <!-- Cabeçalho + seletor de dias -->
+  <header class="hero">
+    <div class="topbar">
+      <button class="ib" id="btnMenu" aria-label="Menu">≡</button>
+      <div class="title" id="viewTitle">Deki</div>
+      <button class="ib" id="btnWeek" aria-label="Semana">▦</button>
+    </div>
+    <div class="month" id="monthLabel"></div>
+    <div class="days" id="days"></div>
+  </header>
+
+  <!-- Tela: Hoje -->
+  <main class="view" id="viewDay">
+    <div class="ritmo" id="ritmo">
+      <button data-r="leve">Leve</button>
+      <button data-r="normal" class="on">Normal</button>
+      <button data-r="intenso">Intenso</button>
+    </div>
+    <div class="energy" id="energy"></div>
+    <div class="list" id="list"></div>
+    <div class="empty" id="empty" hidden>
+      <div class="e-title">Nada marcado para este dia</div>
+      <div class="e-sub">Toque em <b>Nova</b> e escreva como você fala, use uma <b>rotina</b> ou peça <b>Monta meu dia</b>.</div>
+      <div class="e-row"><button class="btn" id="emptyRoutine">Usar rotina</button><button class="btn" id="emptyAssist">Monta meu dia</button></div>
+    </div>
+  </main>
+
+  <!-- Tela: Semana -->
+  <main class="view" id="viewWeek" hidden>
+    <div class="wk-head"><span id="wkRange"></span><span id="wkLoad"></span></div>
+    <div class="week" id="week"></div>
+    <div class="legend"><span><i class="l-today"></i>dia selecionado</span><span><i class="l-plan"></i>planejado</span><span><i class="l-done"></i>concluído</span></div>
+    <div class="sec-row"><div class="sec">Projetos com prazo</div><button class="lnk" id="btnNewProject">+ novo</button></div>
+    <div class="projects" id="projects"></div>
+    <div class="sec">Próximos</div>
+    <div class="next" id="next"></div>
+  </main>
+
+  <!-- Tela: Fechamento -->
+  <main class="view" id="viewClose" hidden>
+    <div class="lines" id="closeLines"></div>
+    <div class="stats" id="closeStats"></div>
+    <div class="sec">Fechar em 3 perguntas · 10 segundos</div>
+    <div class="journal" id="journalForm">
+      <input class="cap-input small" id="jTravou" placeholder="O que travou hoje?">
+      <input class="cap-input small" id="jSurpreendeu" placeholder="O que surpreendeu?">
+      <input class="cap-input small" id="jAmanha" placeholder="O que fica para amanhã?">
+      <div class="sheet-row"><button class="btn ghost" id="jDiary">Ver diário</button><button class="btn primary" id="jSave">Guardar</button></div>
+    </div>
+    <div class="sec" id="heatTitle">Mês</div>
+    <div class="heat" id="heat"></div>
+    <div class="dow"><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span><span>D</span></div>
+  </main>
+
+  <!-- Barra de ações viva -->
+  <footer class="act">
+    <div class="lbl" id="actLabel">Ações</div>
+    <div class="btns" id="btns"></div>
+    <div class="ripples" id="ripples"></div>
+  </footer>
+
+  <!-- Modo foco -->
+  <div class="focus" id="focus" hidden>
+    <div class="f-top"><button class="ib" id="fExit" aria-label="Sair">✕</button><span class="f-lbl">Modo foco</span><span></span></div>
+    <div class="f-ring" id="fRing"><div class="f-inner"><div class="f-time" id="fTime">25:00</div><div class="f-sub" id="fSub">restantes</div></div></div>
+    <div class="f-title" id="fTitle"></div>
+    <div class="f-note" id="fNote"></div>
+    <div class="f-btns"><button class="btn" id="fPause">Pausar</button><button class="btn" id="fPlus">+5 min</button><button class="btn primary" id="fDone">Concluir</button></div>
+    <div class="f-learn" id="fLearn"></div>
+  </div>
+
+  <!-- Captura em português -->
+  <div class="sheet" id="sheetCapture" hidden>
+    <div class="sheet-bg" data-close></div>
+    <div class="sheet-body">
+      <div class="sheet-grip"></div>
+      <div class="sheet-title">Nova tarefa</div>
+      <div class="cap-row"><input id="capInput" class="cap-input" type="text" autocomplete="off" placeholder='ex.: "sex 15h dentista, lembrar 1h antes, 40min"'><button class="mic" id="capMic" title="Falar">🎤</button></div>
+      <div class="chips" id="capChips"></div>
+      <div class="sheet-row">
+        <button class="btn ghost" data-close>Cancelar</button>
+        <button class="btn primary" id="capSave">Adicionar</button>
+      </div>
+      <div class="hint">Entende dia (hoje, amanhã, sex, 12/11), hora (15h, 15h30, das 14h às 16h), duração (40min, 1h30), lembrete (lembrar 1h antes), ritmo (leve, intenso) e repetição (toda segunda, todo dia). Toque no microfone para falar.</div>
+    </div>
+  </div>
+
+  <!-- Detalhe / edição da tarefa -->
+  <div class="sheet" id="sheetTask" hidden>
+    <div class="sheet-bg" data-close></div>
+    <div class="sheet-body">
+      <div class="sheet-grip"></div>
+      <input id="tTitle" class="cap-input" type="text" placeholder="Título">
+      <input id="tNote" class="cap-input small" type="text" placeholder="Observação (opcional)">
+      <div class="grid2">
+        <label>Data<input id="tDate" type="date"></label>
+        <label>Hora<input id="tStart" type="time"></label>
+        <label>Duração (min)<input id="tDur" type="number" min="5" step="5"></label>
+        <label>Lembrete (min antes)<input id="tRemind" type="number" min="0" step="5" placeholder="nenhum"></label>
+      </div>
+      <div class="chips" id="tChips"></div>
+      <details class="det" id="tSplitBox"><summary>Dividir em subpassos</summary>
+        <textarea id="tSplit" class="cap-input small" rows="3" placeholder="um passo por linha&#10;ex.: ler normas&#10;calcular&#10;revisar"></textarea>
+        <div class="hint">Ao salvar, cada linha vira um bloco encadeado no mesmo dia, dividindo a duração.</div>
+      </details>
+      <details class="det" id="tPrepBox"><summary>Preparação (reunião, consulta, aula)</summary>
+        <input id="tPrepNote" class="cap-input small" placeholder="O que levar ou lembrar">
+        <input id="tPrepLink" class="cap-input small" placeholder="Link (Teams, Meet, documento)">
+        <textarea id="tPrepList" class="cap-input small" rows="3" placeholder="o que você quer resolver nela, um por linha"></textarea>
+      </details>
+      <div class="sheet-row">
+        <button class="btn danger" id="tDelete">Excluir</button>
+        <button class="btn ghost" data-close>Fechar</button>
+        <button class="btn primary" id="tSave">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preparar / registrar compromisso -->
+  <div class="sheet" id="sheetPrep" hidden>
+    <div class="sheet-bg" data-close></div>
+    <div class="sheet-body">
+      <div class="sheet-grip"></div>
+      <div class="sheet-title" id="pTitle">Preparar</div>
+      <div class="p-note" id="pNote"></div>
+      <div id="pLink"></div>
+      <div class="checklist" id="pList"></div>
+      <div class="sec">Registrar depois · cada linha vira uma tarefa</div>
+      <textarea id="pRegister" class="cap-input small" rows="3" placeholder="ex.: enviar cronograma até sex&#10;ligar para o fornecedor amanhã 10h"></textarea>
+      <div class="sheet-row"><button class="btn ghost" data-close>Fechar</button><button class="btn primary" id="pSaveRegister">Criar tarefas</button></div>
+    </div>
+  </div>
+
+  <!-- Rotinas por modelo -->
+  <div class="sheet" id="sheetTemplates" hidden>
+    <div class="sheet-bg" data-close></div>
+    <div class="sheet-body">
+      <div class="sheet-grip"></div>
+      <div class="sheet-title">Rotinas</div>
+      <div class="tpl" id="tplList"></div>
+      <div class="sheet-row"><button class="btn ghost" id="tplFromDay">Salvar o dia atual como rotina</button><button class="btn ghost" data-close>Fechar</button></div>
+    </div>
+  </div>
+
+  <!-- Revisão semanal -->
+  <div class="sheet" id="sheetWeekly" hidden>
+    <div class="sheet-bg" data-close></div>
+    <div class="sheet-body">
+      <div class="sheet-grip"></div>
+      <div class="sheet-title" id="wkTitle">Revisão semanal</div>
+      <div class="steps" id="wkSteps"></div>
+      <div id="wkBody"></div>
+      <div class="sheet-row"><button class="btn ghost" data-close>Fechar</button><button class="btn primary" id="wkNext">Próximo</button></div>
+    </div>
+  </div>
+
+  <!-- Diário -->
+  <div class="sheet" id="sheetDiary" hidden>
+    <div class="sheet-bg" data-close></div>
+    <div class="sheet-body">
+      <div class="sheet-grip"></div>
+      <div class="sheet-title">Diário de produtividade</div>
+      <input class="cap-input small" id="diarySearch" placeholder="buscar no diário">
+      <div class="diary" id="diaryList"></div>
+      <div class="sheet-row"><button class="btn ghost" data-close>Fechar</button></div>
+    </div>
+  </div>
+
+  <!-- Importar agenda -->
+  <div class="sheet" id="sheetIcs" hidden>
+    <div class="sheet-bg" data-close></div>
+    <div class="sheet-body">
+      <div class="sheet-grip"></div>
+      <div class="sheet-title">Importar agenda (Outlook, Google)</div>
+      <div class="hint">Os compromissos entram como tarefas fixas e as flexíveis se encaixam ao redor. Importar de novo só adiciona o que for novo.</div>
+      <div class="menu" style="margin-top:10px">
+        <button id="icsFileBtn">Escolher arquivo .ics</button>
+        <input type="file" id="icsFile" accept=".ics,text/calendar" hidden>
+        <input class="cap-input small" id="icsUrl" placeholder="ou cole o link ICS/webcal da agenda">
+        <button id="icsUrlBtn">Importar pelo link</button>
+      </div>
+      <div class="hint">Google Agenda: Configurações → sua agenda → "Endereço secreto no formato iCal". Outlook: Configurações → Agenda → Agendas compartilhadas → Publicar → link ICS.</div>
+      <div class="sheet-row"><button class="btn ghost" data-close>Fechar</button></div>
+    </div>
+  </div>
+
+  <!-- Novo projeto -->
+  <div class="sheet" id="sheetProject" hidden>
+    <div class="sheet-bg" data-close></div>
+    <div class="sheet-body">
+      <div class="sheet-grip"></div>
+      <div class="sheet-title">Projeto com prazo</div>
+      <input class="cap-input" id="prName" placeholder="Nome (ex.: Projeto Integrado)">
+      <div class="grid2"><label>Prazo final<input id="prDeadline" type="date"></label><label>Ritmo das etapas<select id="prEffort" class="sel"><option value="normal">normal</option><option value="intenso">intenso</option><option value="leve">leve</option></select></label></div>
+      <textarea class="cap-input small" id="prSteps" rows="5" placeholder="etapas, uma por linha, com a duração em minutos&#10;ex.: Levantar dados 90&#10;Calcular sinalização 120&#10;Escrever relatório 180"></textarea>
+      <div class="hint">O Deki distribui os blocos pelos dias até o prazo, usando o tempo livre de cada dia, e avisa se não fechar.</div>
+      <div class="sheet-row"><button class="btn ghost" data-close>Cancelar</button><button class="btn primary" id="prSave">Distribuir</button></div>
+    </div>
+  </div>
+
+  <!-- Monta meu dia -->
+  <div class="sheet" id="sheetAssist" hidden>
+    <div class="sheet-bg" data-close></div>
+    <div class="sheet-body">
+      <div class="sheet-grip"></div>
+      <div class="sheet-title">Monta meu dia</div>
+      <div id="asBody"></div>
+      <div class="sheet-row"><button class="btn ghost" data-close>Cancelar</button><button class="btn primary" id="asApply">Aceitar</button></div>
+    </div>
+  </div>
+
+  <!-- Menu / ajustes -->
+  <div class="sheet" id="sheetMenu" hidden>
+    <div class="sheet-bg" data-close></div>
+    <div class="sheet-body">
+      <div class="sheet-grip"></div>
+      <div class="sheet-title">Deki</div>
+      <div class="menu">
+        <button id="mAssist">Monta meu dia</button>
+        <button id="mReplan">Reorganizar o resto do dia</button>
+        <button id="mTemplates">Rotinas</button>
+        <button id="mWeekly">Revisão semanal</button>
+        <button id="mClose">Fechamento do dia</button>
+        <button id="mDiary">Diário</button>
+        <button id="mToday">Ir para hoje</button>
+        <button id="mNotify">Ativar lembretes</button>
+        <button id="mIcs">Importar agenda (.ics)</button>
+        <button id="mSync">Vincular arquivo no OneDrive</button>
+        <button id="mExport">Exportar dados (JSON)</button>
+        <button id="mImport">Importar dados</button>
+        <button id="mSamples">Remover exemplos</button>
+        <div class="grid2">
+          <label>Início do dia<input id="sStart" type="time"></label>
+          <label>Fim do dia<input id="sEnd" type="time"></label>
+          <label>Capacidade (h/dia)<input id="sCap" type="number" min="1" max="16"></label>
+          <label>Energia por dia<input id="sEnergy" type="number" min="3" max="40"></label>
+        </div>
+      </div>
+      <div class="hint" id="syncHint">Seus dados ficam só neste aparelho. Vincule um arquivo numa pasta do OneDrive para ter backup automático, ou exporte um JSON.</div>
+      <input type="file" id="fileImport" accept="application/json" hidden>
+    </div>
+  </div>
+
+  <!-- Modo compacto -->
+  <div class="mini" id="mini" hidden>
+    <div class="m-lbl" id="mLbl">Próxima</div>
+    <div class="m-title" id="mTitle"></div>
+    <div class="m-sub" id="mSub"></div>
+    <div class="m-btns" id="mBtns"></div>
+    <a class="m-link" href="./index.html">Abrir o Deki</a>
+  </div>
+
+  <div class="toast" id="toast" hidden></div>
+</div>
+
+<script src="js/store.js"></script>
+<script src="js/parse.js"></script>
+<script src="js/app.js"></script>
+<script src="js/features.js"></script>
+</body>
+</html>
