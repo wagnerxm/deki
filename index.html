@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0D1319">
+<meta name="theme-color" content="#070708">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Deki">
@@ -15,33 +15,21 @@
 <link rel="stylesheet" href="css/features.css">
 </head>
 <body>
+<i class="glow g1"></i><i class="glow g2"></i><i class="glow g3"></i><i class="glow g4"></i>
 <div id="app" class="app">
 
-  <!-- Cabeçalho + seletor de dias -->
-  <header class="hero">
-    <div class="topbar">
-      <button class="ib" id="btnMenu" aria-label="Menu">≡</button>
-      <div class="title" id="viewTitle">Deki</div>
-      <button class="ib" id="btnWeek" aria-label="Semana">▦</button>
-    </div>
-    <div class="month" id="monthLabel"></div>
-    <div class="days" id="days"></div>
+  <!-- Topo -->
+  <header class="top">
+    <div class="brand">Deki</div>
+    <div class="mid"><button class="ib" id="prevWeek" aria-label="Semana anterior">‹</button><b id="monthLabel"></b><button class="ib" id="nextWeek" aria-label="Próxima semana">›</button></div>
+    <button class="rit glass" id="ritPill">Normal ▾</button>
   </header>
 
-  <!-- Tela: Hoje -->
+  <!-- Tela: Hoje (pilha de dias) -->
   <main class="view" id="viewDay">
-    <div class="ritmo" id="ritmo">
-      <button data-r="leve">Leve</button>
-      <button data-r="normal" class="on">Normal</button>
-      <button data-r="intenso">Intenso</button>
-    </div>
-    <div class="energy" id="energy"></div>
-    <div class="list" id="list"></div>
-    <div class="empty" id="empty" hidden>
-      <div class="e-title">Nada marcado para este dia</div>
-      <div class="e-sub">Toque em <b>Nova</b> e escreva como você fala, use uma <b>rotina</b> ou peça <b>Monta meu dia</b>.</div>
-      <div class="e-row"><button class="btn" id="emptyRoutine">Usar rotina</button><button class="btn" id="emptyAssist">Monta meu dia</button></div>
-    </div>
+    <div class="stack" id="stack"></div>
+    <div id="energy" hidden></div>
+    <div class="empty" id="empty" hidden><button id="emptyRoutine" hidden></button><button id="emptyAssist" hidden></button></div>
   </main>
 
   <!-- Tela: Semana -->
@@ -58,7 +46,7 @@
   <!-- Tela: Fechamento -->
   <main class="view" id="viewClose" hidden>
     <div class="lines" id="closeLines"></div>
-    <div class="stats" id="closeStats"></div>
+    <div class="stats glass" id="closeStats"></div>
     <div class="sec">Fechar em 3 perguntas · 10 segundos</div>
     <div class="journal" id="journalForm">
       <input class="cap-input small" id="jTravou" placeholder="O que travou hoje?">
@@ -71,12 +59,17 @@
     <div class="dow"><span>S</span><span>T</span><span>Q</span><span>Q</span><span>S</span><span>S</span><span>D</span></div>
   </main>
 
-  <!-- Barra de ações viva -->
-  <footer class="act">
-    <div class="lbl" id="actLabel">Ações</div>
-    <div class="btns" id="btns"></div>
-    <div class="ripples" id="ripples"></div>
-  </footer>
+  <!-- Barra de ações (compatibilidade, oculta) -->
+  <footer class="act"><div class="lbl" id="actLabel"></div><div class="btns" id="btns"></div><div class="ripples" id="ripples"></div></footer>
+
+  <!-- Barra de baixo + botão de nova tarefa -->
+  <button class="fab" id="fab" aria-label="Nova tarefa">+</button>
+  <nav class="nav">
+    <button id="navHoje" class="on"><i>▣</i>Hoje</button>
+    <button id="navSemana"><i>▦</i>Semana</button>
+    <button id="navFechar"><i>☾</i>Fechar dia</button>
+    <button id="navMais"><i>⋯</i>Mais</button>
+  </nav>
 
   <!-- Modo foco -->
   <div class="focus" id="focus" hidden>
@@ -100,7 +93,7 @@
         <button class="btn ghost" data-close>Cancelar</button>
         <button class="btn primary" id="capSave">Adicionar</button>
       </div>
-      <div class="hint">Entende dia (hoje, amanhã, sex, 12/11), hora (15h, 15h30, das 14h às 16h), duração (40min, 1h30), lembrete (lembrar 1h antes), ritmo (leve, intenso) e repetição (toda segunda, todo dia). Toque no microfone para falar.</div>
+      <div class="hint">Escreva como fala: dia (hoje, amanhã, sex, 12/11), hora (15h, 15h30, das 14h às 16h), duração (40min, 1h30), lembrete (lembrar 1h antes), ritmo (leve, intenso) e repetição (toda segunda). Ou toque no microfone.</div>
     </div>
   </div>
 
@@ -109,6 +102,7 @@
     <div class="sheet-bg" data-close></div>
     <div class="sheet-body">
       <div class="sheet-grip"></div>
+      <div class="sheet-row" id="tActions" style="justify-content:flex-start;margin:0 0 12px"></div>
       <input id="tTitle" class="cap-input" type="text" placeholder="Título">
       <input id="tNote" class="cap-input small" type="text" placeholder="Observação (opcional)">
       <div class="grid2">
@@ -150,14 +144,14 @@
     </div>
   </div>
 
-  <!-- Rotinas por modelo -->
+  <!-- Rotinas -->
   <div class="sheet" id="sheetTemplates" hidden>
     <div class="sheet-bg" data-close></div>
     <div class="sheet-body">
       <div class="sheet-grip"></div>
       <div class="sheet-title">Rotinas</div>
       <div class="tpl" id="tplList"></div>
-      <div class="sheet-row"><button class="btn ghost" id="tplFromDay">Salvar o dia atual como rotina</button><button class="btn ghost" data-close>Fechar</button></div>
+      <div class="sheet-row"><button class="btn ghost" id="tplFromDay">Salvar o dia aberto como rotina</button><button class="btn ghost" data-close>Fechar</button></div>
     </div>
   </div>
 
@@ -191,8 +185,8 @@
     <div class="sheet-body">
       <div class="sheet-grip"></div>
       <div class="sheet-title">Importar agenda (Outlook, Google)</div>
-      <div class="hint">Os compromissos entram como tarefas fixas e as flexíveis se encaixam ao redor. Importar de novo só adiciona o que for novo.</div>
-      <div class="menu" style="margin-top:10px">
+      <div class="hint">Os compromissos entram como tarefas fixas. Importar de novo só adiciona o que for novo.</div>
+      <div class="menu" style="margin-top:12px">
         <button id="icsFileBtn">Escolher arquivo .ics</button>
         <input type="file" id="icsFile" accept=".ics,text/calendar" hidden>
         <input class="cap-input small" id="icsUrl" placeholder="ou cole o link ICS/webcal da agenda">
@@ -228,26 +222,29 @@
     </div>
   </div>
 
-  <!-- Menu / ajustes -->
+  <!-- Mais -->
   <div class="sheet" id="sheetMenu" hidden>
     <div class="sheet-bg" data-close></div>
     <div class="sheet-body">
       <div class="sheet-grip"></div>
-      <div class="sheet-title">Deki</div>
+      <div class="sheet-title">Mais</div>
       <div class="menu">
-        <button id="mAssist">Monta meu dia</button>
-        <button id="mReplan">Reorganizar o resto do dia</button>
-        <button id="mTemplates">Rotinas</button>
-        <button id="mWeekly">Revisão semanal</button>
-        <button id="mClose">Fechamento do dia</button>
-        <button id="mDiary">Diário</button>
-        <button id="mToday">Ir para hoje</button>
-        <button id="mNotify">Ativar lembretes</button>
-        <button id="mIcs">Importar agenda (.ics)</button>
-        <button id="mSync">Vincular arquivo no OneDrive</button>
-        <button id="mExport">Exportar dados (JSON)</button>
-        <button id="mImport">Importar dados</button>
-        <button id="mSamples">Remover exemplos</button>
+        <div class="mgrid">
+          <button id="mAssist"><i>✦</i>Monta meu dia<small>proposta do dia inteiro</small></button>
+          <button id="mReplan"><i>↻</i>Reorganizar<small>reencaixa a partir de agora</small></button>
+          <button id="mTemplates"><i>▤</i>Rotinas<small>dia de obra, estudo, entrega</small></button>
+          <button id="mWeekly"><i>◔</i>Revisão semanal<small>5 minutos no domingo</small></button>
+          <button id="mDiary"><i>✎</i>Diário<small>suas respostas do fechamento</small></button>
+          <button id="mClose"><i>☾</i>Fechamento<small>resumo do dia</small></button>
+          <button id="mIcs"><i>⇩</i>Importar agenda<small>Google, Outlook (.ics)</small></button>
+          <button id="mSync"><i>⟳</i>Arquivo no OneDrive<small>backup automático</small></button>
+          <button id="mExport"><i>⇪</i>Exportar dados<small>arquivo JSON</small></button>
+          <button id="mImport"><i>⇩</i>Importar dados<small>arquivo JSON</small></button>
+          <button id="mNotify"><i>🔔</i>Lembretes<small>ativar notificações</small></button>
+          <button id="mToday"><i>▣</i>Ir para hoje<small>abre o dia de hoje</small></button>
+        </div>
+        <button id="mSamples">Remover tarefas de exemplo</button>
+        <div class="sec" style="padding-left:0">Ajustes</div>
         <div class="grid2">
           <label>Início do dia<input id="sStart" type="time"></label>
           <label>Fim do dia<input id="sEnd" type="time"></label>

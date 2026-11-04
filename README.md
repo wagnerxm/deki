@@ -30,6 +30,13 @@ Abra http://localhost:8787 no Chrome ou Edge. Para instalar como aplicativo, cli
 
 Depois de instalado, o app abre sem o PC ligado e os dados ficam no próprio aparelho. Segurar o ícone do app mostra os atalhos: Próxima tarefa, Nova tarefa e Monta meu dia.
 
+## Como é a tela
+
+- **Pilha de dias.** Cada dia é um card de vidro; toque e ele se desdobra mostrando as tarefas. Hoje é amarelo. As setas ‹ › no topo mudam a semana, e o período no meio volta para hoje.
+- **Em cada tarefa:** hora em etiqueta (preta normal, grafite fixa, amarela adiada), título, detalhes, botão ▶ na próxima tarefa de hoje e o círculo ✓ para concluir. Toque no texto para editar, iniciar, adiar ou dividir.
+- **Barra de baixo:** Hoje, Semana, Fechar dia e Mais (rotinas, projetos, revisão semanal, diário, importar agenda, backup, lembretes e ajustes). O botão + cria tarefa no dia aberto.
+- **Ritmo** (Leve, Normal, Intenso) no botão do canto superior direito.
+
 ## O dia a dia
 
 - **Nova tarefa**: escreva como você fala, ou toque no microfone e fale. Exemplos: `sex 15h dentista, lembrar 1h antes, 40min`, `amanhã revisar planilha 45min`, `toda segunda academia 7h 1h`, `das 14h às 16h estudar hidrologia`, `estudar cálculo 2h intenso`.
