@@ -2,6 +2,16 @@
 
 Agenda pessoal: o dia como uma linha que você percorre. Funciona no PC e no celular, sem conta e sem internet.
 
+## Instalar (celular ou PC)
+
+Abra **https://wagnerxm.github.io/deki/** e instale:
+
+- Android (Chrome): menu ⋮ → "Instalar app" (ou "Adicionar à tela inicial").
+- iPhone (Safari): compartilhar → "Adicionar à Tela de Início".
+- PC (Chrome ou Edge): ícone de instalar na barra de endereço.
+
+Depois de instalado, abre sem internet. Os dados ficam só no aparelho. Para atualizar o app publicado, faça commit na pasta e `git push`; o GitHub Pages republica em um minuto.
+
 ## Rodar no PC
 
 Precisa só do Node (já instalado). Na pasta do Deki:
