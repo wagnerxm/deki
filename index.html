@@ -15,21 +15,25 @@
 <link rel="stylesheet" href="css/features.css">
 </head>
 <body>
-<i class="glow g1"></i><i class="glow g2"></i><i class="glow g3"></i><i class="glow g4"></i>
 <div id="app" class="app">
 
-  <!-- Topo -->
-  <header class="top">
-    <div class="brand">Deki</div>
-    <div class="mid"><button class="ib" id="prevWeek" aria-label="Semana anterior">‹</button><b id="monthLabel"></b><button class="ib" id="nextWeek" aria-label="Próxima semana">›</button></div>
-    <button class="rit glass" id="ritPill">Normal ▾</button>
+  <!-- Topo: título, mês e pílulas de dias -->
+  <header class="hero">
+    <div class="tb"><button class="ib" id="btnMenu" aria-label="Mais">≡</button><span id="viewTitle">Minhas tarefas</span><button class="ib" id="btnDay" aria-label="Ações do dia">⋮</button></div>
+    <div class="month" id="monthLabel"></div>
+    <div class="days" id="days"></div>
   </header>
 
-  <!-- Tela: Hoje (pilha de dias) -->
+  <!-- Tela: dia (linha do tempo) -->
   <main class="view" id="viewDay">
-    <div class="stack" id="stack"></div>
+    <div class="sum"><span id="sumText"></span><button class="rit" id="ritPill">Normal ▾</button></div>
+    <div class="tl" id="list"></div>
     <div id="energy" hidden></div>
-    <div class="empty" id="empty" hidden><button id="emptyRoutine" hidden></button><button id="emptyAssist" hidden></button></div>
+    <div class="empty" id="empty" hidden>
+      <div class="e-title">Nada marcado para este dia</div>
+      <div class="e-sub">Toque no <b>+</b> e escreva como você fala, use uma <b>rotina</b> ou peça <b>Monta meu dia</b>.</div>
+      <div class="e-row"><button class="btn" id="emptyRoutine">Usar rotina</button><button class="btn primary" id="emptyAssist">Monta meu dia</button></div>
+    </div>
   </main>
 
   <!-- Tela: Semana -->
@@ -63,13 +67,29 @@
   <footer class="act"><div class="lbl" id="actLabel"></div><div class="btns" id="btns"></div><div class="ripples" id="ripples"></div></footer>
 
   <!-- Barra de baixo + botão de nova tarefa -->
-  <button class="fab" id="fab" aria-label="Nova tarefa">+</button>
   <nav class="nav">
-    <button id="navHoje" class="on"><i>▣</i>Hoje</button>
-    <button id="navSemana"><i>▦</i>Semana</button>
-    <button id="navFechar"><i>☾</i>Fechar dia</button>
-    <button id="navMais"><i>⋯</i>Mais</button>
+    <button id="navHoje" class="on" aria-label="Hoje">⌂<small>Hoje</small></button>
+    <button id="navSemana" aria-label="Semana">▦<small>Semana</small></button>
+    <button class="mid" id="fab" aria-label="Nova tarefa">+</button>
+    <button id="navFechar" aria-label="Fechar dia">☾<small>Fechar</small></button>
+    <button id="navMais" aria-label="Mais">⚙<small>Mais</small></button>
   </nav>
+
+  <!-- Ações do dia -->
+  <div class="sheet" id="sheetDay" hidden>
+    <div class="sheet-bg" data-close></div>
+    <div class="sheet-body">
+      <div class="sheet-grip"></div>
+      <div class="sheet-title" id="dayTitle">Este dia</div>
+      <div class="menu"><div class="mgrid">
+        <button id="dMonta"><i>✦</i>Monta meu dia<small>proposta do dia inteiro</small></button>
+        <button id="dReplan"><i>↻</i>Reorganizar<small>reencaixa a partir de agora</small></button>
+        <button id="dRotinas"><i>▤</i>Rotinas<small>aplicar um dia pronto</small></button>
+        <button id="dHoje"><i>⌂</i>Ir para hoje<small>volta ao dia de hoje</small></button>
+      </div></div>
+      <div class="sheet-row"><button class="btn ghost" data-close>Fechar</button></div>
+    </div>
+  </div>
 
   <!-- Modo foco -->
   <div class="focus" id="focus" hidden>

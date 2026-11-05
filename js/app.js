@@ -1,4 +1,4 @@
-/* Deki · núcleo: pilha de dias dobráveis, barra de baixo, captura, edição, menu, lembretes */
+/* Deki · núcleo: topo com dias, linha do tempo com cards de aba e barra de tempo, captura, edição, menu, lembretes */
 (function () {
   const S = Store;
   const $ = s => document.querySelector(s);
@@ -8,7 +8,7 @@
 
   const App = {
     S, $, DOWS, DOWL, MONTHS,
-    sel: S.today(), base: S.today(), view: 'day', folded: false,
+    sel: S.today(), view: 'day',
     hooks: { render: [], actions: [], day: [] },
     onRender(fn) { App.hooks.render.push(fn); },
     onActions(fn) { App.hooks.actions.push(fn); },
@@ -18,12 +18,15 @@
 
   let cap = null, capOverride = {};
   let editingId = null;
+  let daysDragged = false;
   const fired = new Set();
 
   /* ===== utilidades ===== */
   const fmtDur = m => m >= 60 ? (m % 60 ? `${Math.floor(m / 60)}h${S.pad(m % 60)}` : `${m / 60}h`) : `${m} min`;
   const endOf = k => S.hm(Math.min(S.toMin(k.start) + k.dur, 24 * 60 - 1));
   const nowMin = () => { const d = new Date(); return d.getHours() * 60 + d.getMinutes(); };
+  const nowSec = () => { const d = new Date(); return d.getHours() * 3600 + d.getMinutes() * 60 + d.getSeconds(); };
+  const clock = s => { s = Math.max(0, Math.round(s)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), ss = s % 60; return h ? `${h}:${S.pad(m)}:${S.pad(ss)}` : `${S.pad(m)}:${S.pad(ss)}`; };
   const dateLabel = s => { const d = S.parseYmd(s); return `${DOWL[d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()].slice(0, 3)}`; };
   const shortDate = s => { if (s === S.today()) return 'hoje'; if (s === S.addDays(S.today(), 1)) return 'amanhã'; const d = S.parseYmd(s); return `${DOWS[d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()].slice(0, 3)}`; };
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -40,63 +43,89 @@
 
   /* ===== topo ===== */
   function renderTop() {
-    const a = S.parseYmd(App.base), b = S.parseYmd(S.addDays(App.base, 6));
-    $('#monthLabel').textContent = a.getMonth() === b.getMonth() ? `${a.getDate()} – ${b.getDate()} ${MONTHS[a.getMonth()].slice(0, 3)}` : `${a.getDate()} ${MONTHS[a.getMonth()].slice(0, 3)} – ${b.getDate()} ${MONTHS[b.getMonth()].slice(0, 3)}`;
-    const r = S.settings.ritmo; const pill = $('#ritPill'); pill.textContent = up(r) + ' ▾'; pill.className = 'rit glass r-' + r;
+    const d = S.parseYmd(App.sel);
+    $('#monthLabel').innerHTML = `${up(MONTHS[d.getMonth()])} ${d.getFullYear()}<i>▼</i>`;
+    $('#viewTitle').textContent = App.view === 'week' ? 'Semana' : App.view === 'close' ? 'Fechamento' : (App.sel === S.today() ? 'Minhas tarefas' : dateLabel(App.sel));
+    const days = $('#days'); days.innerHTML = '';
+    for (let i = -3; i <= 3; i++) {
+      const s = S.addDays(App.sel, i); const dd = S.parseYmd(s);
+      const el = document.createElement('button');
+      el.className = 'd' + (i === 0 ? ' on' : '') + (Math.abs(i) === 3 ? ' edge' : '') + (s === S.today() ? ' today' : '');
+      el.innerHTML = `<b>${dd.getDate()}</b><span>${DOWS[dd.getDay()]}</span>${S.tasks(s).length ? '<u></u>' : ''}`;
+      el.addEventListener('click', () => { if (daysDragged) return; App.sel = s; render(); });
+      days.appendChild(el);
+    }
+    $('#ritPill').textContent = up(S.settings.ritmo) + ' ▾';
     ['navHoje', 'navSemana', 'navFechar'].forEach(id => $('#' + id).classList.remove('on'));
     $('#' + (App.view === 'week' ? 'navSemana' : App.view === 'close' ? 'navFechar' : 'navHoje')).classList.add('on');
-    $('#fab').hidden = App.view === 'close';
   }
 
-  /* ===== pilha de dias ===== */
-  function dayName(s, i) {
-    const t = S.today();
-    if (s === t) return 'Hoje'; if (s === S.addDays(t, 1)) return 'Amanhã'; if (s === S.addDays(t, -1)) return 'Ontem';
-    return DOWL[S.parseYmd(s).getDay()];
+  /* ===== fases e barra de tempo ===== */
+  function phaseOf(k, date) {
+    if (k.status === 'concluida') return 'done';
+    if (k.status === 'andamento') { if (k.pausedAt) return 'pausada'; return elapsedMin(k) > k.dur ? 'estourou' : 'andamento'; }
+    if (k.status === 'adiada') return 'adiada';
+    if (k.fixed) { const left = S.toMin(k.start) * 60 - nowSec(); return (date === S.today() && left > 0 && left <= 1800) ? 'breve' : 'fixa'; }
+    return 'afazer';
   }
-  function itemHtml(k, date) {
-    const isToday = date === S.today();
-    const cls = k.status === 'concluida' ? 'done' : k.status === 'andamento' ? 'live' : k.status === 'adiada' ? 'late' : k.fixed ? 'fix' : '';
-    const p = progressOf(k);
-    const bits = [fmtDur(k.dur), k.note, k.fixed ? (k.sourceId ? 'agenda' : 'fixa') : '', k.effort !== 'normal' ? k.effort : '', k.postponed ? (k.postponed === 1 ? 'veio de ontem' : `adiada ${k.postponed}x`) : '', k.status === 'andamento' ? (k.pausedAt ? 'pausada' : `${p}%`) : '', k.status === 'concluida' && k.actual ? `levou ${fmtDur(k.actual)}` : '', k.overflow ? 'passa do fim do dia' : '', k.remind != null && k.status !== 'concluida' ? '🔔' : ''].filter(Boolean).join(' · ');
-    const canPlay = isToday && k.isNext;
-    return `<div class="item ${cls}" data-id="${k.id}">
-      <div class="tm">${k.start.replace(':', '<small>:</small>')}${k.status === 'andamento' ? `<i style="width:${p}%"></i>` : ''}</div>
-      <div class="tx"><h3>${esc(k.title)}</h3><p>${esc(bits)}</p></div>
-      ${canPlay ? `<button class="pl" data-a="start" title="Iniciar">▶</button>` : ''}
-      <button class="ck ${k.status === 'concluida' ? 'on' : ''}" data-a="${k.status === 'concluida' ? 'reopen' : 'complete'}" title="${k.status === 'concluida' ? 'Reabrir' : 'Concluir'}">✓</button>
+  function barOf(k, ph) {
+    if (ph === 'done') return { w: 100, tx: '100%', cls: '' };
+    if (ph === 'andamento') { const el = elapsedMin(k) * 60; return { w: Math.min(100, el / (k.dur * 60) * 100), tx: clock(k.dur * 60 - el), cls: 'run', dot: true }; }
+    if (ph === 'pausada') return { w: progressOf(k), tx: 'pausada', cls: '' };
+    if (ph === 'estourou') return { w: 100, tx: '+' + clock(elapsedMin(k) * 60 - k.dur * 60), cls: 'over' };
+    if (ph === 'breve') { const left = S.toMin(k.start) * 60 - nowSec(); return { w: Math.max(0, left / 1800 * 100), tx: 'em ' + clock(left), cls: 'soon' }; }
+    return { w: 0, tx: fmtDur(k.dur), cls: '' };
+  }
+  const TAB = { done: 'Concluída', andamento: 'Em andamento', pausada: 'Pausada', estourou: 'Estourou', breve: 'Começa em breve' };
+  const ICO = { done: '✓', andamento: '▶', pausada: '❚❚', estourou: '!', adiada: '↪', fixa: '🔒', breve: '🔒', afazer: '≡' };
+
+  /* ===== tela do dia: linha do tempo ===== */
+  function slotHtml(k, date) {
+    const ph = phaseOf(k, date); const b = barOf(k, ph);
+    const tab = TAB[ph] || (ph === 'adiada' ? `Adiada ${k.postponed}x` : ph === 'fixa' ? (k.sourceId ? 'Agenda' : 'Fixa') : (k.auto ? 'Encaixada' : 'Agendada'));
+    const bits = [k.start, ph === 'done' && k.actual ? `levou ${fmtDur(k.actual)}` : fmtDur(k.dur), k.note, k.effort !== 'normal' ? k.effort : '', k.postponed && ph !== 'done' ? (k.postponed === 1 ? 'veio de ontem' : '') : '', k.overflow ? 'passa do fim do dia' : '', k.remind != null && ph !== 'done' ? '🔔' : ''].filter(Boolean).join(' · ');
+    const pin = ph === 'done' ? ['#6b6e7a', '✓', ''] : ph === 'andamento' || ph === 'pausada' || ph === 'estourou' ? ['var(--on)', '▶', 'dark'] : k.isNext ? ['var(--on)', '▶', 'dark go'] : ph === 'fixa' || ph === 'breve' ? ['#ffffff', '🔒', 'dark'] : ph === 'adiada' ? ['var(--f-adiada)', '↪', ''] : ['#4a4d59', '◆', ''];
+    return `<div class="slot s-${ph}${ph === 'andamento' ? ' live' : ''}${ph === 'done' ? ' done' : ''}" data-id="${k.id}" data-ph="${ph}">
+      <button class="pin ${pin[2]}" style="--pc:${pin[0]}" ${k.isNext ? 'data-a="start" title="Iniciar"' : ''}><i>${pin[1]}</i></button>
+      <div class="tk">
+        <div class="tab">${tab}</div>
+        <div class="tbar ${b.cls}"><div class="tr"><i style="width:${b.w}%"></i>${b.dot ? `<u style="left:${b.w}%"></u>` : ''}</div><div class="tx">${b.tx}</div></div>
+        <button class="ico" data-a="${ph === 'done' ? 'reopen' : 'complete'}" title="${ph === 'done' ? 'Reabrir' : 'Concluir'}"><b>${ICO[ph]}</b></button>
+        <div class="txt"><h3>${esc(k.title)}</h3><p>${esc(bits)}</p></div>
+        <div class="seal">100</div>
+        <button class="more" title="Opções">⋮</button>
+      </div>
     </div>`;
   }
   function renderDay() {
-    const stack = $('#stack'); stack.innerHTML = '';
-    const t = S.today(); const budget = S.settings.energy;
-    for (let i = 0; i < 7; i++) {
-      const s = S.addDays(App.base, i); const d = S.parseYmd(s);
-      const plan = S.plan(s); const n = plan.length; const done = plan.filter(k => k.status === 'concluida').length;
-      if (s === t && !plan.some(k => k.status === 'andamento')) { const nx = plan.find(k => (k.status === 'pendente' || k.status === 'adiada') && (!k.fixed || S.toMin(k.start) + k.dur > nowMin())); if (nx) nx.isNext = true; }
-      const mins = plan.reduce((a, k) => a + k.dur, 0); const en = S.energyDay(s);
-      const open = s === App.sel && !App.folded;
-      const tone = s === t ? 'd0' : s < t ? 'past d3' : 'd' + Math.min(6, Math.max(1, Math.round((S.parseYmd(s) - S.parseYmd(t)) / 86400000)));
-      const sub = n ? `${n} tarefa${n > 1 ? 's' : ''} · ${fmtDur(mins)}${done ? ` · ✓ ${done}` : ''}${en > budget ? ` · ⚡ pesado` : ''}` : 'livre';
-      const cap = S.settings.capacity * 60; const bars = [0.25, 0.5, 0.75, 1].map(f => mins >= cap * f);
-      const items = plan.length ? plan.map(k => itemHtml(k, s)) : [`<div class="item empty">Dia livre · toque em + para planejar</div>`];
-      const half = Math.ceil(items.length / 2);
-      const el = document.createElement('div');
-      el.className = `day ${tone} ${open ? 'open' : ''}`; el.dataset.date = s; el.dataset.n = items.length;
-      el.innerHTML = `<div class="band ${s === t ? '' : 'glass'}"><div class="dn"><small>${DOWS[d.getDay()]}</small><b>${S.pad(d.getDate())}</b></div><div class="tx"><h2>${dayName(s)}</h2><div class="sub ${en > budget ? 'over' : ''}">${sub}</div></div><div class="load">${bars.map(x => `<i class="${x ? 'on' : ''}" style="width:${x ? 20 : 9}px"></i>`).join('')}</div></div>
-        <div class="fold"><div class="half a">${items.slice(0, half).join('')}</div><div class="half b">${items.slice(half).join('')}</div></div>`;
-      el.querySelector('.band').addEventListener('click', () => { if (App.sel === s) App.folded = !App.folded; else { App.sel = s; App.folded = false; } render(); });
-      el.querySelectorAll('.item[data-id]').forEach(it => {
-        const id = it.dataset.id;
-        it.addEventListener('click', e => { const b = e.target.closest('button'); if (b) { e.stopPropagation(); doAction(b.dataset.a, id, it); } else openTask(id); });
-      });
-      stack.appendChild(el);
-    }
-    sizeFolds();
-    App.hooks.day.forEach(fn => { try { fn(S.plan(App.sel || t)); } catch (e) {} });
+    const list = $('#list'); const t = S.today();
+    const plan = S.plan(App.sel);
+    if (App.sel === t && !plan.some(k => k.status === 'andamento')) { const nx = plan.find(k => (k.status === 'pendente' || k.status === 'adiada') && (!k.fixed || S.toMin(k.start) + k.dur > nowMin())); if (nx) nx.isNext = true; }
+    const n = plan.length, done = plan.filter(k => k.status === 'concluida').length, mins = plan.reduce((a, k) => a + k.dur, 0);
+    const heavy = S.energyDay(App.sel) > S.settings.energy;
+    $('#sumText').innerHTML = n ? `<b>${n} tarefa${n > 1 ? 's' : ''}</b> · ${fmtDur(mins)}${done ? ` · ${done} concluída${done > 1 ? 's' : ''}` : ''}${heavy ? ' · <span class="warn">⚡ pesado</span>' : ''}` : '<b>Dia livre</b>';
+    $('#empty').hidden = n > 0; list.hidden = n === 0;
+    list.innerHTML = plan.map(k => slotHtml(k, App.sel)).join('');
+    list.querySelectorAll('.slot').forEach(sl => {
+      const id = sl.dataset.id;
+      sl.addEventListener('click', e => { const b = e.target.closest('button[data-a]'); if (b) { e.stopPropagation(); doAction(b.dataset.a, id, sl); } else openTask(id); });
+    });
+    App.hooks.day.forEach(fn => { try { fn(plan); } catch (e) {} });
   }
-  function sizeFolds() {
-    document.querySelectorAll('.day').forEach(d => { const f = d.querySelector('.fold'); f.style.height = d.classList.contains('open') ? (Math.max(1, +d.dataset.n) * 76 + 2) + 'px' : '0px'; });
+  /* atualiza só as barras, a cada segundo */
+  function tickBars() {
+    if (App.view !== 'day' || document.hidden) return;
+    let changed = false;
+    document.querySelectorAll('#list .slot').forEach(sl => {
+      const k = S.get(sl.dataset.id); if (!k) return;
+      const ph = phaseOf(k, App.sel);
+      if (ph !== sl.dataset.ph) { changed = true; return; }
+      if (ph !== 'andamento' && ph !== 'estourou' && ph !== 'breve') return;
+      const b = barOf(k, ph);
+      sl.querySelector('.tr i').style.width = b.w + '%'; const u = sl.querySelector('.tr u'); if (u) u.style.left = b.w + '%';
+      sl.querySelector('.tx').textContent = b.tx;
+    });
+    if (changed && !document.querySelector('.slot.finishing')) renderDay();
   }
 
   /* ===== ações ===== */
@@ -115,12 +144,12 @@
     const patch = { status: 'andamento', startedAt: Date.now() - (k.progress || 0) / 100 * k.dur * 60000, pausedMs: 0, pausedAt: null };
     if (!k.fixed || !k.start) patch.start = S.hm(nowMin());
     if (k.date !== S.today()) patch.date = S.today();
-    S.update(k.id, patch); App.sel = S.today(); App.base = S.today(); App.view = 'day'; render();
+    S.update(k.id, patch); App.sel = S.today(); App.view = 'day'; render();
     if (!(opts && opts.quiet)) toast(`Iniciada: ${k.title}`);
     if (App.openFocus && !(opts && opts.noFocus)) App.openFocus(k.id);
   }
   function completeTask(k, el, opts) {
-    if (!el) el = document.querySelector(`.item[data-id="${k.id}"]`);
+    if (!el) el = document.querySelector(`.slot[data-id="${k.id}"]`);
     const finish = () => {
       const planned = S.plan(k.date).find(x => x.id === k.id);
       const patch = { status: 'concluida', progress: 100, doneAt: Date.now(), pausedAt: null, start: k.start || (planned && planned.start) || S.hm(nowMin()) };
@@ -129,13 +158,16 @@
       render(); toast(k.actual ? `Concluída · levou ${fmtDur(k.actual)}` : 'Concluída');
     };
     if (!el || (opts && opts.instant)) return finish();
-    el.classList.add('finishing');
-    for (let i = 0; i < 8; i++) {
+    el.classList.add('finishing'); el.classList.remove('live');
+    const tab = el.querySelector('.tab'); if (tab) tab.textContent = 'Concluída';
+    const bar = el.querySelector('.tbar'); if (bar) { bar.className = 'tbar'; bar.querySelector('.tr i').style.width = '100%'; const u = bar.querySelector('.tr u'); if (u) u.remove(); bar.querySelector('.tx').textContent = '100%'; }
+    const ic = el.querySelector('.ico b'); if (ic) ic.textContent = '✓';
+    for (let i = 0; i < 9; i++) {
       const p = document.createElement('i'); p.className = 'pt'; const w = 3 + Math.random() * 5;
-      p.style.cssText = `right:${14 + Math.random() * 60}px;top:${20 + Math.random() * 30}px;width:${w}px;height:${w + Math.random() * 4}px;animation-delay:${Math.random() * .25}s;background:${['#F7C514', '#FFE066', '#0B0B0C'][i % 3]}`;
+      p.style.cssText = `left:${10 + Math.random() * 80}%;top:${24 + Math.random() * 14}px;width:${w}px;height:${w + Math.random() * 4}px;animation-delay:${Math.random() * .25}s;background:${['#7CC79A', '#F7C514', '#F1E8DA'][i % 3]}`;
       el.appendChild(p);
     }
-    setTimeout(finish, 650);
+    setTimeout(finish, 750);
   }
   function postponeTask(k) {
     const patch = { date: S.addDays(k.date, 1), status: 'adiada', postponed: (k.postponed || 0) + 1, startedAt: null, pausedAt: null, pausedMs: 0 };
@@ -162,15 +194,14 @@
   /* ===== contexto para as funções avançadas (mantém os ganchos) ===== */
   function renderActions() {
     const today = S.today(); const running = S.state.tasks.find(k => k.status === 'andamento');
-    const ctx = { view: App.view, sel: App.sel, today, running, plan: App.view === 'day' ? S.plan(App.sel || today) : null, next: null, soonFixed: null };
+    const ctx = { view: App.view, sel: App.sel, today, running, plan: App.view === 'day' ? S.plan(App.sel) : null, next: null, soonFixed: null };
     App.hooks.actions.forEach(fn => { try { fn(ctx, [], ''); } catch (e) {} });
   }
 
   /* ===== semana ===== */
   function renderWeek() {
-    const selDay = App.sel || S.today();
-    const d = S.parseYmd(selDay); const dow = (d.getDay() + 6) % 7;
-    const monday = S.addDays(selDay, -dow);
+    const d = S.parseYmd(App.sel); const dow = (d.getDay() + 6) % 7;
+    const monday = S.addDays(App.sel, -dow);
     const capMin = S.settings.capacity * 60;
     const wk = $('#week'); wk.innerHTML = '';
     let total = 0;
@@ -178,9 +209,9 @@
       const s = S.addDays(monday, i); const dd = S.parseYmd(s);
       const ts = S.tasks(s); const planned = ts.reduce((a, k) => a + k.dur, 0); const done = ts.filter(k => k.status === 'concluida').reduce((a, k) => a + k.dur, 0);
       total += planned;
-      const el = document.createElement('div'); el.className = 'wd' + (s === selDay ? ' sel' : '') + (planned > capMin ? ' over' : '');
+      const el = document.createElement('div'); el.className = 'wd' + (s === App.sel ? ' sel' : '') + (planned > capMin ? ' over' : '');
       el.innerHTML = `<div class="n">${DOWS[dd.getDay()]}</div><div class="num">${dd.getDate()}</div><div class="col"><i style="height:${Math.min(100, planned / capMin * 100)}%"></i><u style="height:${Math.min(100, done / capMin * 100)}%"></u></div><div class="h">${planned ? fmtDur(planned) : '—'}</div>`;
-      el.addEventListener('click', () => { App.sel = s; App.base = s; App.view = 'day'; render(); });
+      el.addEventListener('click', () => { App.sel = s; App.view = 'day'; render(); });
       wk.appendChild(el);
     }
     const a = S.parseYmd(monday), b = S.parseYmd(S.addDays(monday, 6));
@@ -194,7 +225,7 @@
         if (count >= 14 || k.status === 'concluida') return; count++;
         const row = document.createElement('div'); row.className = 'nx';
         row.innerHTML = `<div class="t">${shortDate(s)} · ${k.start}</div><div>${esc(k.title)}<small>${fmtDur(k.dur)}${k.fixed ? ' · fixa' : ''}${k.remind != null ? ` · lembrete ${k.remind ? k.remind + ' min antes' : 'na hora'}` : ''}${k.postponed ? ` · adiada ${k.postponed}x` : ''}</small></div>`;
-        row.addEventListener('click', () => { App.sel = s; App.base = s; App.view = 'day'; render(); });
+        row.addEventListener('click', () => { App.sel = s; App.view = 'day'; render(); });
         nx.appendChild(row);
       });
     }
@@ -203,8 +234,7 @@
 
   /* ===== fechamento ===== */
   function renderClose() {
-    const selDay = App.sel || S.today();
-    const ts = S.plan(selDay); const done = ts.filter(k => k.status === 'concluida'); const pend = ts.filter(k => k.status !== 'concluida');
+    const ts = S.plan(App.sel); const done = ts.filter(k => k.status === 'concluida'); const pend = ts.filter(k => k.status !== 'concluida');
     const focus = done.reduce((a, k) => a + (k.actual || k.dur), 0);
     const st = S.stats();
     const pct = ts.length ? Math.round(done.length / ts.length * 100) : 0;
@@ -214,12 +244,12 @@
     const sug = over.length ? `<b>${esc(over[0].title)}</b> levou ${fmtDur(over[0].actual)} em vez de ${fmtDur(over[0].dur)}. Da próxima vez o Deki já sugere o tempo real.` : bestH != null ? `Você costuma concluir mais perto das <b>${bestH}h</b>. Reserve esse horário para o que é intenso.` : `Comece amanhã no ritmo <b>intenso</b> com a tarefa mais difícil, enquanto a energia está alta.`;
     const lines = [
       ['Concluído', ts.length ? `Fechou <b>${done.length} de ${ts.length}</b> tarefas${done.length ? `, <b>${fmtDur(focus)}</b> de foco.` : '.'}` : 'Nenhuma tarefa marcada para este dia.'],
-      ['Pendente', pend.length ? `<b>${pend.length}</b> ficou para depois: ${pend.map(k => esc(k.title)).slice(0, 3).join(', ')}${pend.length > 3 ? '…' : ''}. ${selDay === S.today() ? 'O que não for concluído escorrega para amanhã.' : ''}` : 'Nada ficou para trás.'],
+      ['Pendente', pend.length ? `<b>${pend.length}</b> ficou para depois: ${pend.map(k => esc(k.title)).slice(0, 3).join(', ')}${pend.length > 3 ? '…' : ''}. ${App.sel === S.today() ? 'O que não for concluído escorrega para amanhã.' : ''}` : 'Nada ficou para trás.'],
       ['Sugestão', sug]
     ];
-    $('#closeLines').innerHTML = `<div class="line"><span class="l">${dateLabel(selDay)}</span></div>` + lines.map(([l, t]) => `<div class="line"><span class="l">${l}</span>${t}</div>`).join('');
+    $('#closeLines').innerHTML = lines.map(([l, t]) => `<div class="line"><span class="l">${l}</span>${t}</div>`).join('');
     $('#closeStats').innerHTML = `<div class="stat"><b>${fmtDur(focus)}</b><small>foco</small></div><div class="stat"><b>${st.streak}</b><small>dias seguidos</small></div><div class="stat"><b>${pct}%</b><small>no planejado</small></div>`;
-    const d = S.parseYmd(selDay); const y = d.getFullYear(), m = d.getMonth();
+    const d = S.parseYmd(App.sel); const y = d.getFullYear(), m = d.getMonth();
     $('#heatTitle').textContent = `${up(MONTHS[m])} · dias com tarefas concluídas`;
     const first = new Date(y, m, 1); const off = (first.getDay() + 6) % 7; const n = new Date(y, m + 1, 0).getDate();
     const heat = $('#heat'); heat.innerHTML = '';
@@ -236,7 +266,7 @@
   function openCapture(date, preset) {
     capOverride = {}; cap = null;
     const sh = $('#sheetCapture'); sh.hidden = false;
-    const inp = $('#capInput'); inp.value = preset || ''; inp.dataset.date = date || App.sel || S.today();
+    const inp = $('#capInput'); inp.value = preset || ''; inp.dataset.date = date || App.sel;
     renderChips(); setTimeout(() => inp.focus(), 50);
   }
   function currentCap() {
@@ -271,11 +301,10 @@
     if (c.repeat) { const step = c.repeat.kind === 'daily' ? 1 : 7; const times = c.repeat.kind === 'daily' ? 13 : 7; for (let i = 1; i <= times; i++) mk(S.addDays(c.date, i * step)); n += times; }
     $('#sheetCapture').hidden = true;
     toast(n > 1 ? `${n} ocorrências de "${c.title}"` : `Adicionada: ${c.title} · ${shortDate(c.date)}${c.start ? ' ' + c.start : ''}`);
-    App.sel = c.date; App.folded = false; if (c.date < App.base || c.date > S.addDays(App.base, 6)) App.base = c.date;
-    if (App.view !== 'day') App.view = 'day';
+    App.sel = c.date; App.view = 'day';
     render();
   }
-  function pickDate(fn, cur) { const i = document.createElement('input'); i.type = 'date'; i.value = cur || App.sel || S.today(); i.style.cssText = 'position:fixed;opacity:0;left:0;top:0'; document.body.appendChild(i); i.addEventListener('change', () => { if (i.value) fn(i.value); i.remove(); }); i.addEventListener('blur', () => setTimeout(() => i.remove(), 300)); i.focus(); try { i.showPicker(); } catch (e) {} }
+  function pickDate(fn, cur) { const i = document.createElement('input'); i.type = 'date'; i.value = cur || App.sel; i.style.cssText = 'position:fixed;opacity:0;left:0;top:0'; document.body.appendChild(i); i.addEventListener('change', () => { if (i.value) fn(i.value); i.remove(); }); i.addEventListener('blur', () => setTimeout(() => i.remove(), 300)); i.focus(); try { i.showPicker(); } catch (e) {} }
   function pickTime(fn, cur) { const i = document.createElement('input'); i.type = 'time'; i.value = cur || '09:00'; i.style.cssText = 'position:fixed;opacity:0;left:0;top:0'; document.body.appendChild(i); i.addEventListener('change', () => { fn(i.value); i.remove(); }); i.addEventListener('blur', () => setTimeout(() => i.remove(), 300)); i.focus(); try { i.showPicker(); } catch (e) {} }
   Object.assign(App, { openCapture, renderChips, pickDate, pickTime });
 
@@ -285,7 +314,6 @@
     $('#tTitle').value = k.title; $('#tNote').value = k.note || ''; $('#tDate').value = k.date; $('#tStart').value = k.start || ''; $('#tDur').value = k.dur; $('#tRemind').value = k.remind == null ? '' : k.remind;
     $('#tSplit').value = ''; $('#tSplitBox').open = false;
     const p = k.prep || {}; $('#tPrepNote').value = p.note || ''; $('#tPrepLink').value = p.link || ''; $('#tPrepList').value = p.checklist || ''; $('#tPrepBox').open = !!(p.note || p.link || p.checklist);
-    // ações rápidas no topo
     const acts = $('#tActions'); acts.innerHTML = '';
     const mk = (label, cls, fn) => { const b = document.createElement('button'); b.className = 'btn ' + cls; b.textContent = label; b.addEventListener('click', () => { $('#sheetTask').hidden = true; fn(); }); acts.appendChild(b); };
     if (k.status === 'andamento') { mk('✓ Concluir', 'primary', () => completeTask(k)); mk('◎ Foco', '', () => App.openFocus && App.openFocus(k.id)); mk('+15 min', '', () => doAction('plus15', k.id)); mk('→ Adiar', '', () => postponeTask(k)); }
@@ -321,10 +349,16 @@
   }
   Object.assign(App, { openTask, saveTask });
 
-  /* ===== menu ===== */
+  /* ===== menus ===== */
   function openMenu() { $('#sStart').value = S.settings.dayStart; $('#sEnd').value = S.settings.dayEnd; $('#sCap').value = S.settings.capacity; $('#sEnergy').value = S.settings.energy; $('#mSamples').hidden = !S.settings.samples; $('#sheetMenu').hidden = false; }
   function bindMenu() {
     $('#navMais').addEventListener('click', openMenu);
+    $('#btnMenu').addEventListener('click', openMenu);
+    $('#btnDay').addEventListener('click', () => { $('#dayTitle').textContent = up(shortDate(App.sel)); $('#sheetDay').hidden = false; });
+    $('#dMonta').addEventListener('click', () => { closeSheets(); if (App.openAssist) App.openAssist(App.sel); });
+    $('#dReplan').addEventListener('click', () => { closeSheets(); $('#mReplan').click(); });
+    $('#dRotinas').addEventListener('click', () => { closeSheets(); if (App.openTemplates) App.openTemplates(); });
+    $('#dHoje').addEventListener('click', () => { closeSheets(); goToday(); });
     $('#mClose').addEventListener('click', () => { App.view = 'close'; closeSheets(); render(); });
     $('#mToday').addEventListener('click', () => { closeSheets(); goToday(); });
     $('#mNotify').addEventListener('click', async () => { if (!('Notification' in window)) return toast('Este navegador não tem notificações'); const p = await Notification.requestPermission(); toast(p === 'granted' ? 'Lembretes ativados' : 'Lembretes não autorizados'); });
@@ -335,13 +369,13 @@
     ['sStart', 'sEnd', 'sCap', 'sEnergy'].forEach(id => $('#' + id).addEventListener('change', () => { S.setSettings({ dayStart: $('#sStart').value || '07:00', dayEnd: $('#sEnd').value || '22:00', capacity: Math.max(1, +$('#sCap').value || 8), energy: Math.max(3, +$('#sEnergy').value || 12) }); render(); }));
   }
   function closeSheets() { document.querySelectorAll('.sheet').forEach(s => s.hidden = true); }
-  function goToday() { App.sel = S.today(); App.base = S.today(); App.folded = false; App.view = 'day'; render(); }
+  function goToday() { App.sel = S.today(); App.view = 'day'; render(); }
   App.closeSheets = closeSheets; App.goToday = goToday;
 
   /* ===== lembretes e relógio ===== */
   function tick() {
     const t = S.today();
-    if (S.state.lastOpen !== t) { const n = S.slip(); if (n) toast(`${n} tarefa${n > 1 ? 's' : ''} escorregou para hoje`); App.sel = t; App.base = t; render(); }
+    if (S.state.lastOpen !== t) { const n = S.slip(); if (n) toast(`${n} tarefa${n > 1 ? 's' : ''} escorregou para hoje`); App.sel = t; render(); }
     const plan = S.plan(t); const now = nowMin();
     plan.forEach(k => {
       if (k.remind == null || !k.start || k.status === 'concluida') return;
@@ -353,7 +387,6 @@
         toast('🔔 ' + msg);
       }
     });
-    if (App.view === 'day') document.querySelectorAll('.item.live').forEach(it => { const k = S.get(it.dataset.id); if (!k) return; const p = progressOf(k); const bar = it.querySelector('.tm i'); if (bar) bar.style.width = p + '%'; });
     App.hooks.render.forEach(fn => { try { fn('tick'); } catch (e) {} });
   }
 
@@ -370,13 +403,14 @@
   /* ===== eventos ===== */
   function bind() {
     $('#ritPill').addEventListener('click', () => { const cyc = ['leve', 'normal', 'intenso']; S.setSettings({ ritmo: cyc[(cyc.indexOf(S.settings.ritmo) + 1) % 3] }); render(); toast(`Ritmo ${S.settings.ritmo}`); });
-    $('#prevWeek').addEventListener('click', () => { App.base = S.addDays(App.base, -7); render(); });
-    $('#nextWeek').addEventListener('click', () => { App.base = S.addDays(App.base, 7); render(); });
-    $('#monthLabel').addEventListener('click', goToday);
-    $('#navHoje').addEventListener('click', () => { if (App.view === 'day') goToday(); else { App.view = 'day'; render(); } });
+    $('#monthLabel').addEventListener('click', () => pickDate(v => { App.sel = v; render(); }, App.sel));
+    let x0 = null; const days = $('#days');
+    days.addEventListener('pointerdown', e => { x0 = e.clientX; daysDragged = false; });
+    days.addEventListener('pointerup', e => { if (x0 == null) return; const dx = e.clientX - x0; x0 = null; if (Math.abs(dx) > 40) { daysDragged = true; App.sel = S.addDays(App.sel, dx < 0 ? 7 : -7); render(); setTimeout(() => daysDragged = false, 50); } });
+    $('#navHoje').addEventListener('click', goToday);
     $('#navSemana').addEventListener('click', () => { App.view = 'week'; render(); });
     $('#navFechar').addEventListener('click', () => { App.view = 'close'; render(); });
-    $('#fab').addEventListener('click', () => openCapture(App.sel || S.today()));
+    $('#fab').addEventListener('click', () => openCapture(App.sel));
     document.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', closeSheets));
     $('#capInput').addEventListener('input', renderChips);
     $('#capInput').addEventListener('keydown', e => { if (e.key === 'Enter') saveCapture(); });
@@ -384,7 +418,7 @@
     $('#tSave').addEventListener('click', saveTask);
     $('#tDur').addEventListener('input', () => { const k = S.get(editingId); if (k) renderTaskChips(Object.assign({}, k, { fixed: $('#tChips').dataset.fixed === 'true', effort: $('#tChips').dataset.effort, status: $('#tChips').dataset.status })); });
     $('#tDelete').addEventListener('click', () => { if (editingId) { S.remove(editingId); $('#sheetTask').hidden = true; toast('Excluída'); render(); } });
-    document.addEventListener('visibilitychange', () => { if (!document.hidden) tick(); });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) { tick(); if (App.view === 'day') renderDay(); } });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheets(); });
     bindMenu();
   }
@@ -392,6 +426,6 @@
   /* ===== início ===== */
   const slipped = S.slip();
   bind();
-  App.boot = () => { render(); if (slipped) toast(`${slipped} tarefa${slipped > 1 ? 's' : ''} escorregou para hoje`); setInterval(tick, 30000); };
+  App.boot = () => { render(); if (slipped) toast(`${slipped} tarefa${slipped > 1 ? 's' : ''} escorregou para hoje`); setInterval(tick, 30000); setInterval(tickBars, 1000); };
   if ('serviceWorker' in navigator && /^https?:/.test(location.protocol)) navigator.serviceWorker.register('./sw.js').catch(() => {});
 })();

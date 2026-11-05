@@ -32,10 +32,13 @@ Depois de instalado, o app abre sem o PC ligado e os dados ficam no próprio apa
 
 ## Como é a tela
 
-- **Pilha de dias.** Cada dia é um card de vidro; toque e ele se desdobra mostrando as tarefas. Hoje é amarelo. As setas ‹ › no topo mudam a semana, e o período no meio volta para hoje.
-- **Em cada tarefa:** hora em etiqueta (preta normal, grafite fixa, amarela adiada), título, detalhes, botão ▶ na próxima tarefa de hoje e o círculo ✓ para concluir. Toque no texto para editar, iniciar, adiar ou dividir.
-- **Barra de baixo:** Hoje, Semana, Fechar dia e Mais (rotinas, projetos, revisão semanal, diário, importar agenda, backup, lembretes e ajustes). O botão + cria tarefa no dia aberto.
-- **Ritmo** (Leve, Normal, Intenso) no botão do canto superior direito.
+- **Topo.** Título, mês e sete pílulas de dias. O dia selecionado fica amarelo e maior; hoje tem contorno amarelo. Toque numa pílula para trocar de dia, arraste a faixa para pular uma semana, toque no mês para escolher uma data.
+- **Linha do tempo.** As tarefas do dia numa linha tracejada com pinos. O pino amarelo ▶ marca a próxima tarefa de hoje: tocar nele inicia.
+- **Card de aba.** A aba traz a fase; ao lado dela, a barra de tempo. No card: o losango (tocar conclui e carimba "100"; em concluída, reabre), título, detalhes e ⋮ (ficha da tarefa; em compromisso fixo abre a preparação). Tocar no texto abre a ficha com Iniciar, Concluir, Adiar e Dividir.
+- **Cores das fases:** areia = a fazer · azul-gelo = fixa · azul = começa em breve · terracota = adiada · âmbar = em andamento · areia-escura = pausada · vinho = estourou o tempo · verde = concluída.
+- **Barra de tempo:** em andamento ela corre com o tempo restante contando; meia hora antes de um compromisso fixo ela esvazia até a hora; se passar do planejado, mostra o excesso; concluída marca 100%.
+- **Barra de baixo:** Hoje, Semana, o botão + (nova tarefa no dia selecionado), Fechar dia e Mais. O botão ⋮ do topo traz as ações do dia: Monta meu dia, Reorganizar, Rotinas e Ir para hoje.
+- **Ritmo** (Leve, Normal, Intenso) no botão ao lado do resumo do dia.
 
 ## O dia a dia
 
