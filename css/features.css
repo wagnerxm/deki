@@ -38,8 +38,6 @@ body.mini-mode .hero,body.mini-mode .view,body.mini-mode .act{display:none!impor
 .m-link{position:absolute;bottom:calc(24px + var(--safe-b));color:var(--muted);font-size:12px}
 
 /* ===== captura: voz ===== */
-.cap-row{display:flex;gap:8px;align-items:flex-start}
-.cap-row .cap-input{flex:1}
 .mic{width:48px;height:48px;border-radius:12px;background:var(--bg);border:1px solid var(--line);font-size:18px;flex:none}
 .mic.on{border-color:var(--on);box-shadow:0 0 0 2px rgba(247,197,20,.35),0 0 18px rgba(247,197,20,.5);animation:glowpill 1.2s ease-in-out infinite}
 .chip.learn{border-color:var(--sage);color:var(--sage)}

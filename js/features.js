@@ -230,7 +230,7 @@
       mic.classList.add('on'); $('#capInput').placeholder = 'Pode falar…';
       rec.onresult = e => { let s = ''; for (const r of e.results) s += r[0].transcript; $('#capInput').value = s.replace(/\s+/g, ' ').trim(); A.renderChips(); };
       rec.onerror = e => { toast(e.error === 'not-allowed' ? 'Permita o microfone para falar' : 'Não entendi, tente de novo'); };
-      rec.onend = () => { rec = null; mic.classList.remove('on'); $('#capInput').placeholder = 'ex.: "sex 15h dentista, lembrar 1h antes, 40min"'; A.renderChips(); };
+      rec.onend = () => { rec = null; mic.classList.remove('on'); $('#capInput').placeholder = 'ex.: dentista sex 15h 40min'; A.renderChips(); };
       try { rec.start(); } catch (e) { rec = null; mic.classList.remove('on'); }
     });
   }

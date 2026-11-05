@@ -106,14 +106,13 @@
     <div class="sheet-bg" data-close></div>
     <div class="sheet-body">
       <div class="sheet-grip"></div>
-      <div class="sheet-title">Nova tarefa</div>
-      <div class="cap-row"><input id="capInput" class="cap-input" type="text" autocomplete="off" placeholder='ex.: "sex 15h dentista, lembrar 1h antes, 40min"'><button class="mic" id="capMic" title="Falar">🎤</button></div>
-      <div class="chips" id="capChips"></div>
-      <div class="sheet-row">
-        <button class="btn ghost" data-close>Cancelar</button>
-        <button class="btn primary" id="capSave">Adicionar</button>
-      </div>
-      <div class="hint">Escreva como fala: dia (hoje, amanhã, sex, 12/11), hora (15h, 15h30, das 14h às 16h), duração (40min, 1h30), lembrete (lembrar 1h antes), ritmo (leve, intenso) e repetição (toda segunda). Ou toque no microfone.</div>
+      <div class="cap-head"><div class="sheet-title">Nova tarefa</div><button class="cap-x" data-close aria-label="Fechar">✕</button></div>
+      <div class="cap-box"><input id="capInput" type="text" autocomplete="off" enterkeyhint="done" placeholder="ex.: dentista sex 15h 40min"><button class="mic" id="capMic" title="Falar" aria-label="Falar">🎤</button></div>
+      <div class="cap-hint">Escreva como fala. Toque num detalhe para mudar.</div>
+      <div class="cap-lbl">Vai ficar assim</div>
+      <div class="cap-prev" id="capPrev"></div>
+      <div class="chips cap-edit" id="capChips"></div>
+      <button class="btn primary cap-save" id="capSave">Adicionar</button>
     </div>
   </div>
 

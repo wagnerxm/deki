@@ -279,19 +279,25 @@
   }
   function renderChips() {
     cap = currentCap();
-    const box = $('#capChips');
-    const chip = (cls, text, fn) => { const c = document.createElement('div'); c.className = 'chip ' + cls; c.textContent = text; c.addEventListener('click', fn); return c; };
-    box.innerHTML = '';
-    box.appendChild(chip('ok', `📅 ${shortDate(cap.date)}`, () => pickDate(v => { capOverride.date = v; renderChips(); }, cap.date)));
-    box.appendChild(chip(cap.start ? 'ok' : 'add', cap.start ? `🕒 ${cap.start}` : '+ hora (flexível)', () => pickTime(v => { capOverride.start = v || null; if (!v) capOverride.fixed = false; renderChips(); }, cap.start)));
-    box.appendChild(chip('ok', `⏱ ${fmtDur(cap.dur)}`, () => { const cyc = [15, 30, 45, 60, 90, 120, 180]; capOverride.dur = cyc[(cyc.indexOf(cap.dur) + 1) % cyc.length] || 30; renderChips(); }));
-    if (cap.suggest && cap.suggest.median !== cap.dur) box.appendChild(chip('learn', `costuma levar ${fmtDur(cap.suggest.median)} · usar`, () => { capOverride.dur = cap.suggest.median; renderChips(); }));
-    box.appendChild(chip(cap.remind != null ? 'ok' : 'add', cap.remind != null ? `🔔 ${cap.remind ? cap.remind + ' min antes' : 'na hora'}` : '+ lembrete', () => { const cyc = [null, 0, 10, 30, 60]; capOverride.remind = cyc[(cyc.indexOf(cap.remind) + 1) % cyc.length]; renderChips(); }));
-    box.appendChild(chip(cap.fixed ? 'ok' : '', cap.fixed ? '🔒 fixa' : '↔ flexível', () => { capOverride.fixed = !cap.fixed; if (capOverride.fixed && !cap.start) capOverride.start = '09:00'; renderChips(); }));
-    box.appendChild(chip(cap.effort !== 'normal' ? 'ok' : '', `ritmo ${cap.effort}`, () => { const cyc = ['leve', 'normal', 'intenso']; capOverride.effort = cyc[(cyc.indexOf(cap.effort) + 1) % 3]; renderChips(); }));
-    if (cap.repeat) box.appendChild(chip('ok', cap.repeat.kind === 'daily' ? '🔁 todo dia' : `🔁 toda ${cap.repeat.dow != null ? DOWS[cap.repeat.dow] : 'semana'}`, () => { capOverride.repeat = null; renderChips(); }));
-    if (cap.note) box.appendChild(chip('', `✎ ${cap.note}`, () => {}));
-    if (!cap.title) box.appendChild(chip('warn', 'escreva o que é', () => $('#capInput').focus()));
+    const remTxt = cap.remind == null ? '—' : cap.remind ? (cap.remind >= 60 ? `${cap.remind / 60}h antes` : `${cap.remind} min antes`) : 'na hora';
+    const repTxt = !cap.repeat ? '—' : cap.repeat.kind === 'daily' ? 'todo dia' : `toda ${cap.repeat.dow != null ? DOWS[cap.repeat.dow] : 'semana'}`;
+    /* prévia: o card exatamente como vai aparecer na linha do tempo */
+    const ph = cap.fixed ? 'fixa' : 'afazer';
+    const when = shortDate(cap.date);
+    const tab = `${cap.fixed ? 'Fixa' : 'Encaixada'} · ${when}`;
+    const bits = [cap.start || 'horário livre', fmtDur(cap.dur), cap.note, cap.effort !== 'normal' ? cap.effort : '', cap.remind != null ? '🔔' : '', cap.repeat ? '↻ ' + repTxt : ''].filter(Boolean).join(' · ');
+    $('#capPrev').innerHTML = `<div class="slot s-${ph} ${cap.title ? '' : 'empty-t'}"><div class="tk"><div class="tab">${esc(tab)}</div><div class="tbar"><div class="tr"><i></i></div><div class="tx">${fmtDur(cap.dur)}</div></div><div class="ico"><b>${cap.fixed ? '🔒' : '≡'}</b></div><div class="txt"><h3>${esc(cap.title || 'Sua tarefa')}</h3><p>${esc(bits)}</p></div><div class="more">⋮</div></div></div>`;
+    /* detalhes: cada um é um botão para corrigir */
+    const box = $('#capChips'); box.innerHTML = '';
+    const chip = (label, val, fn, cls) => { const c = document.createElement('button'); c.type = 'button'; c.className = 'chip ' + (cls || '') + (val === '—' ? ' off' : ''); c.innerHTML = `${label}<u>${esc(val)}</u>`; c.addEventListener('click', fn); box.appendChild(c); };
+    chip('Dia', when, () => pickDate(v => { capOverride.date = v; renderChips(); }, cap.date));
+    chip('Hora', cap.start || 'livre', () => pickTime(v => { capOverride.start = v || null; if (!v) capOverride.fixed = false; renderChips(); }, cap.start));
+    chip('Duração', fmtDur(cap.dur), () => { const cyc = [15, 30, 45, 60, 90, 120, 180]; capOverride.dur = cyc[(cyc.indexOf(cap.dur) + 1) % cyc.length] || 30; renderChips(); });
+    chip('Lembrete', remTxt, () => { const cyc = [null, 0, 10, 30, 60]; capOverride.remind = cyc[(cyc.indexOf(cap.remind) + 1) % cyc.length]; renderChips(); });
+    chip('Tipo', cap.fixed ? 'fixa' : 'flexível', () => { capOverride.fixed = !cap.fixed; if (capOverride.fixed && !cap.start) capOverride.start = '09:00'; renderChips(); });
+    chip('Ritmo', cap.effort, () => { const cyc = ['leve', 'normal', 'intenso']; capOverride.effort = cyc[(cyc.indexOf(cap.effort) + 1) % 3]; renderChips(); });
+    chip('Repetir', repTxt, () => { const cyc = [null, { kind: 'daily' }, { kind: 'weekly', dow: S.parseYmd(cap.date).getDay() }]; const i = !cap.repeat ? 0 : cap.repeat.kind === 'daily' ? 1 : 2; capOverride.repeat = cyc[(i + 1) % 3]; renderChips(); });
+    if (cap.suggest && cap.suggest.median !== cap.dur) chip('Costuma levar', fmtDur(cap.suggest.median), () => { capOverride.dur = cap.suggest.median; renderChips(); }, 'learn');
   }
   function saveCapture() {
     const c = currentCap();
