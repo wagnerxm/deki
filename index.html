@@ -294,16 +294,22 @@
       <div class="cap-head"><div class="sheet-title">Fala Deki</div><button class="cap-x" data-close aria-label="Fechar">✕</button></div>
       <div class="si-st" id="siStatus"></div>
       <div class="si-say">“E aí Siri, <b>Fala Deki</b>” → “Reunião da Planep hoje às 14 horas”</div>
-      <div class="cap-lbl">1 · Ligar neste aparelho</div>
-      <label class="si-f">Repositório (caixa de entrada)<input id="siRepo" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+      <div class="cap-lbl">1 · Criar a chave</div>
+      <a class="btn primary si-key" href="https://github.com/settings/personal-access-tokens/new?name=Fala+Deki&description=Tarefas+ditadas+pela+Siri+para+o+Deki&expires_in=366&issues=write" target="_blank" rel="noopener">Criar chave no GitHub</a>
+      <div class="hint si-tip">Nome, validade e permissão já vêm preenchidos. Lá, em <b>Repository access</b>, escolha <b>Only select repositories</b>, marque <b>deki-caixa</b>, toque em <b>Generate token</b> e copie a chave.</div>
+      <div class="cap-lbl">2 · Colar aqui</div>
       <label class="si-f">Chave do GitHub<input id="siToken" type="password" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
-      <div class="sheet-row"><button class="btn ghost" id="siOff" hidden>Desligar</button><button class="btn" id="siNow">Buscar agora</button><button class="btn primary" id="siSave">Salvar</button></div>
-      <div class="cap-lbl">2 · Atalho no iPhone (app Atalhos)</div>
+      <label class="si-f">Repositório (caixa de entrada)<input id="siRepo" type="text" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+      <div class="sheet-row si-btns"><button class="btn primary" id="siSave">Salvar</button><button class="btn" id="siNow">Buscar agora</button><button class="btn ghost" id="siOff" hidden>Desligar</button></div>
+      <div class="cap-lbl">3 · Atalho no iPhone (app Atalhos)</div>
       <ol class="si-steps">
         <li>Novo atalho com o nome <b>Fala Deki</b>.</li>
         <li>Ação <b>Ditar Texto</b> · Idioma: Português (Brasil).</li>
-        <li>Ação <b>Obter Conteúdo do URL</b>, com a URL:<code id="siUrl"></code><button class="lnk" id="siCopyUrl">Copiar URL</button></li>
-        <li>Nela, toque em <b>Mostrar Mais</b>: Método <b>POST</b>. Cabeçalhos: <b>Authorization</b> = <code>Bearer</code> + espaço + a sua chave, e <b>Accept</b> = <code>application/vnd.github+json</code> <button class="lnk" id="siCopyAcc">Copiar</button></li>
+        <li>Ação <b>Obter Conteúdo do URL</b>, com a URL:<code id="siUrl"></code><button class="si-cp" id="siCopyUrl">Copiar URL</button></li>
+        <li>Nela, toque em <b>Mostrar Mais</b> e escolha o Método <b>POST</b>. Em <b>Cabeçalhos</b>, adicione estes dois:
+          <div class="si-kv"><span>Authorization</span><button class="si-cp" id="siCopyAuth">Copiar valor</button></div>
+          <div class="si-kv"><span>Accept</span><button class="si-cp" id="siCopyAcc">Copiar valor</button></div>
+        </li>
         <li>Corpo da Solicitação: <b>JSON</b> · campo <b>title</b> (Texto) = <b>Texto Ditado</b>.</li>
         <li>Ação <b>Falar Texto</b>: “Anotado no Deki”.</li>
       </ol>

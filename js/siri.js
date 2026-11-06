@@ -89,7 +89,7 @@
     cfg = next; cfg.err = null; store(cfg); renderSheet(); toast('Fala Deki ligado'); poll();
   }
 
-  function copy(txt) { (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => toast('Copiado'), () => toast(txt, 5000)); }
+  function copy(txt) { (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(() => toast('Copiado'), () => toast('Não consegui copiar')); }
 
   $('#mSiri').addEventListener('click', openSheet);
   $('#siSave').addEventListener('click', saveSheet);
@@ -97,6 +97,7 @@
   $('#siOff').addEventListener('click', () => { delete cfg.token; cfg.err = null; store(cfg); renderSheet(); toast('Desligado neste aparelho'); });
   $('#siCopyUrl').addEventListener('click', () => copy(URL_ISSUES()));
   $('#siCopyAcc').addEventListener('click', () => copy('application/vnd.github+json'));
+  $('#siCopyAuth').addEventListener('click', () => { if (cfg.token) copy('Bearer ' + cfg.token); else toast('Salve a chave primeiro'); });
 
   /* ---------- quando buscar ---------- */
   poll();
