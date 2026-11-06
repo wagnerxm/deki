@@ -115,3 +115,22 @@ textarea.cap-input{resize:vertical;min-height:60px;line-height:1.4}
 /* ===== semana ===== */
 .l-done{background:var(--sage)}
 .wd.over .num{color:#FFE066}
+
+/* ===== Fala Deki (Siri) ===== */
+.si-st{font-size:15px;font-weight:600;color:var(--muted);margin:2px 0 10px}
+.si-st.ok{color:var(--sage)}
+.si-st.bad{color:var(--terra)}
+.si-say{background:rgba(247,197,20,.09);border:1px solid rgba(247,197,20,.35);border-radius:14px;padding:12px 14px;font-size:15px;line-height:1.45;margin-bottom:6px}
+.si-say b{color:var(--on)}
+.si-f{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:10px}
+.si-f input{background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.12);color:var(--fg);border-radius:12px;padding:12px 13px;font-size:16px}
+.si-steps{padding-left:22px;font-size:14.5px;line-height:1.55;color:#d6d9e0;display:flex;flex-direction:column;gap:8px}
+.si-steps b{color:var(--fg)}
+.si-steps code{display:block;font-size:12.5px;background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:8px;padding:7px 9px;margin:5px 0 3px;word-break:break-all;color:var(--on2)}
+.si-steps li > code:not(#siUrl){display:inline;padding:1px 5px;margin:0}
+.siri-note{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(104px + var(--safe-b));z-index:51;width:min(92%,440px);display:flex;align-items:center;gap:12px;background:rgba(36,38,45,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(124,199,154,.55);border-radius:20px;padding:12px 12px 12px 16px;box-shadow:0 14px 34px rgba(0,0,0,.55);animation:up .3s}
+.sn-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.sn-txt small{font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--sage);font-weight:700}
+.sn-txt b{font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sn-txt span{font-size:13.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sn-undo{flex:none;background:rgba(255,255,255,.1);color:var(--fg);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:14px;font-weight:600}

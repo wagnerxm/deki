@@ -79,3 +79,6 @@ manifest.webmanifest  instalação como app e atalhos
 sw.js                 funcionamento offline
 server.js             servidor local (também busca links .ics)
 ```
+
+## Fala Deki (Siri)
+"E aí Siri, Fala Deki" → "Reunião da Planep hoje às 14 horas". Um Atalho do iPhone dita a frase e cria uma issue no repositório privado `wagnerxm/deki-caixa`; o Deki busca as issues abertas ao abrir (e a cada 30 s), transforma em tarefa (data relativa ao dia em que foi dita) e fecha a issue. Configurar em Mais → Fala Deki. A chave (token fine-grained, só Issues: leitura e escrita nesse repositório) fica apenas no aparelho (`localStorage`, chave `deki.siri`).

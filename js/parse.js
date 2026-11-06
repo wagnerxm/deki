@@ -5,9 +5,10 @@
   const MON = { jan: 0, fev: 1, mar: 2, abr: 3, mai: 4, jun: 5, jul: 6, ago: 7, set: 8, out: 9, nov: 10, dez: 11 };
   const FIXED_WORDS = /dentista|medic[oa]|consulta|reuniao|aula|prova|entrevista|voo|viagem|audiencia|visita|exame|almoco com|jantar com/;
 
-  function parse(text) {
+  // ref = dia em que a frase foi dita (a Siri pode ter falado ontem e o Deki só abrir hoje)
+  function parse(text, ref) {
     const S = global.Store;
-    const todayS = S.today();
+    const todayS = ref || S.today();
     const raw = text;
     // normalizado tem o mesmo comprimento do original (só remove acentos), então os índices batem
     let src = ' ' + norm(raw) + ' ';

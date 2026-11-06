@@ -1,7 +1,7 @@
 /* Deki · service worker: funciona offline (rede primeiro, cache como reserva) */
-const CACHE = 'deki-v7';
+const CACHE = 'deki-v8';
 const ASSETS = [
-  './', './index.html', './css/deki.css', './css/features.css', './js/features.js', './js/store.js', './js/parse.js', './js/app.js',
+  './', './index.html', './css/deki.css', './css/features.css', './js/features.js', './js/store.js', './js/parse.js', './js/app.js', './js/siri.js',
   './manifest.webmanifest', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-512-maskable.png'
 ];
 self.addEventListener('install', e => {
