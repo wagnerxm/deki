@@ -1,5 +1,5 @@
 /* Deki · service worker: funciona offline (rede primeiro, cache como reserva) */
-const CACHE = 'deki-v6';
+const CACHE = 'deki-v7';
 const ASSETS = [
   './', './index.html', './css/deki.css', './css/features.css', './js/features.js', './js/store.js', './js/parse.js', './js/app.js',
   './manifest.webmanifest', './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-512-maskable.png'

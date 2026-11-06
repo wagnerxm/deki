@@ -23,12 +23,30 @@
       return true;
     };
 
+    let atWord = false;
+
+    // comando falado no início: "Fala Deki, marca pra mim…", "me lembra de…", "anota…"
+    take(/^\s(?:(?:e\s+ai\s+)?(?:fala\s+)?deki[\s,.!]+)?(?:por\s+favor[\s,]+)?(?:(?:marca|marque|marcar|agenda|agende|agendar|anota|anote|anotar|coloca|coloque|bota|adiciona|adicione|cria|crie)(?:\s+(?:pra|para)\s+mim)?|(?:me\s+)?(lembr[ae]|lembrar)(?:\s+(?:me|pra\s+mim|para\s+mim))?(?:\s+(?:de|da|do|que))?)(?:\s+(?:uma?|o|a)(?=\s))?[\s,:.]+/, m => { if (m[1]) out.remind = 0; });
+
+    // horário falado: "às 14 horas", "às 14 e 30", "às 2 da tarde", "8 da manhã"
+    take(/\s(?:as\s+|a\s+|das\s+)?(\d{1,2})(?:\s*(?:horas?|h))?(?:\s+e\s+(\d{1,2}|meia))?(?:\s*min(?:utos)?)?\s+da\s+(manha|tarde|noite|madrugada)\s*/, m => {
+      let h = +m[1]; const mi = m[2] === 'meia' ? 30 : +(m[2] || 0);
+      if ((m[3] === 'tarde' || m[3] === 'noite') && h < 12) h += 12;
+      atWord = true; out.start = fix(h, mi);
+    });
+    for (let i = 0; i < 2; i++) {
+      const ok = take(/\s(as|a\s+partir\s+das|das|ate\s+as)\s+(\d{1,2})\s*(?:horas?|h)?\s+e\s+(\d{1,2}|meia)(?:\s*min(?:utos)?)?\s*/, m => { atWord = atWord || /^a/.test(m[1]); setTime(+m[2], m[3] === 'meia' ? 30 : +m[3], m[1]); })
+        || take(/\s(as|a\s+partir\s+das|das|ate\s+as)\s+(\d{1,2})\s*horas?\s*/, m => { atWord = atWord || /^a/.test(m[1]); setTime(+m[2], 0, m[1]); });
+      if (!ok) break;
+    }
+    take(/\s(meio[\s-]dia)\s+e\s+meia\s*/, () => { out.start = '12:30'; atWord = true; });
+
     // lembrete (antes da duração, para "1h antes" não virar duração)
     take(/\s(?:lembrar|lembrete|avisar|aviso|me\s+avisa|me\s+lembra)\s*(?:me\s+)?(\d{1,3})\s*(h|horas?|min|minutos?)\s*antes\s*/, m => { out.remind = /^h/.test(m[2]) ? +m[1] * 60 : +m[1]; });
     take(/\s(?:lembrar|lembrete|avisar)\s*(?:me\s+)?(?:na\s+hora|no\s+horario)\s*/, () => { out.remind = 0; });
 
     // duração explícita
-    take(/\s(?:por|durante)\s+(\d{1,2})\s*h\s*(\d{2})?\s*/, m => { out.dur = +m[1] * 60 + (+m[2] || 0); });
+    take(/\s(?:por|durante)\s+(\d{1,2})\s*h(?!ora)\s*(\d{2})?\s*/, m => { out.dur = +m[1] * 60 + (+m[2] || 0); });
     take(/\s(?:por|durante)\s+(\d{1,3})\s*(?:min|minutos?)\s*/, m => { out.dur = +m[1]; });
     take(/\s(?:por|durante)\s+(\d{1,2})\s*(?:horas?|h)\s*/, m => { out.dur = +m[1] * 60; });
     take(/\s(\d{1,3})\s*(?:min|minutos?)\s*/, m => { out.dur = +m[1]; });
@@ -42,7 +60,7 @@
     take(/\s(?:toda\s+semana|semanal(?:mente)?)\s*/, () => { out.repeat = { kind: 'weekly' }; });
 
     // data
-    take(/\s(hoje)\s*/, () => { out.date = todayS; });
+    take(/\s(hoje|hj)\s*/, () => { out.date = todayS; });
     take(/\s(depois\s+de\s+amanha)\s*/, () => { out.date = S.addDays(todayS, 2); });
     take(/\s(amanha)\s*/, () => { out.date = S.addDays(todayS, 1); });
     take(/\s(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?\s*/, m => {
@@ -60,7 +78,6 @@
     take(/\sdia\s+(\d{1,2})\s*/, m => { const d = new Date(); let c = new Date(d.getFullYear(), d.getMonth(), +m[1]); if (S.ymd(c) < todayS) c = new Date(d.getFullYear(), d.getMonth() + 1, +m[1]); out.date = S.ymd(c); });
 
     // hora (pode haver mais de uma: "das 14h às 16h", "7h 1h")
-    let atWord = false;
     for (let i = 0; i < 3; i++) {
       const ok = take(/\s(as|a\s+partir\s+das|a\s+partir\s+de|das|de)?\s*(\d{1,2})\s*[h:]\s*(\d{2})\s*/, m => { atWord = atWord || /^(as|a)/.test(m[1] || ''); setTime(+m[2], +m[3], m[1]); })
         || take(/\s(as|das|de)\s+(\d{1,2})\s*h?\s*/, m => { atWord = atWord || /^a/.test(m[1]); setTime(+m[2], 0, m[1]); })
