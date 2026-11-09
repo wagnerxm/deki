@@ -143,3 +143,23 @@ textarea.cap-input{resize:vertical;min-height:60px;line-height:1.4}
 .si-cp{display:inline-block;background:rgba(247,197,20,.12);border:1px solid rgba(247,197,20,.4);color:var(--on);border-radius:10px;padding:8px 12px;font-size:13.5px;font-weight:600}
 .si-kv{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:7px;background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:10px;padding:6px 6px 6px 11px}
 .si-kv span{font-size:14px;font-weight:600;color:var(--fg)}
+
+/* ===== Hoje em fitas ===== */
+.sum-r{display:flex;align-items:center;gap:8px;flex:none}
+.fit-tg{width:38px;height:34px;border-radius:999px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.07);color:var(--muted)}
+.fit-tg.on{background:rgba(247,197,20,.16);color:var(--on2);box-shadow:inset 0 0 0 1.5px var(--on)}
+.fitas{position:relative;margin-top:10px;overflow:hidden}
+.fitas svg{position:absolute;left:0;top:0;z-index:2;pointer-events:none}
+.ft-rail{position:absolute;top:0;bottom:0;z-index:1;background:linear-gradient(90deg,#383a44,#2c2e36);box-shadow:-8px 0 20px rgba(0,0,0,.35),inset 1px 0 0 rgba(255,255,255,.1),inset -1px 0 0 rgba(0,0,0,.4)}
+.ft-rail span{position:absolute;left:0;right:0;text-align:center;font-size:11px;font-weight:700;color:#7d818d}
+.fita{position:absolute;z-index:3;height:64px;border-radius:32px 0 0 32px;padding:0 12px 0 23px;display:flex;align-items:center;gap:10px;text-align:left;color:var(--ink);line-height:1.15;box-shadow:0 12px 24px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.35)}
+.fita.claro{color:#fff}
+.fita .ft{flex:1;min-width:0}
+.fita small{display:block;font-size:13px;font-weight:600;opacity:.75;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fita b{display:block;font-size:18px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fita .ok{flex:none;display:inline-flex;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,.18);align-items:center;justify-content:center;font-size:13px;font-weight:900}
+.fita:active{filter:brightness(.94)}
+.fita.in{animation:fitaIn .45s cubic-bezier(.2,.8,.2,1) both}
+@keyframes fitaIn{from{opacity:0;transform:translateX(-40px)}to{opacity:1;transform:none}}
+.ft-now{position:absolute;right:0;height:2px;z-index:4;background:var(--on);box-shadow:0 0 10px var(--on)}
+.ft-nowt{position:absolute;right:6px;z-index:4;font-size:11px;font-weight:800;color:var(--ink);background:var(--on);border-radius:8px;padding:2px 6px}

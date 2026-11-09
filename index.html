@@ -26,8 +26,9 @@
 
   <!-- Tela: dia (linha do tempo) -->
   <main class="view" id="viewDay">
-    <div class="sum"><span id="sumText"></span><button class="rit" id="ritPill">Normal ▾</button></div>
+    <div class="sum"><span id="sumText"></span><span class="sum-r"><button class="fit-tg" id="fitTg" aria-label="Ver em fitas" title="Ver em fitas"><svg width="22" height="18" viewBox="0 0 22 18"><path d="M1 3h11l4 4h5M1 9h11l2 1h7M1 15h11l4-3h5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button class="rit" id="ritPill">Normal ▾</button></span></div>
     <div class="tl" id="list"></div>
+    <div class="fitas" id="fitas" hidden></div>
     <div id="energy" hidden></div>
     <div class="empty" id="empty" hidden>
       <div class="e-title">Nada marcado para este dia</div>
@@ -326,5 +327,6 @@
 <script src="js/app.js"></script>
 <script src="js/features.js"></script>
 <script src="js/siri.js"></script>
+<script src="js/fitas.js"></script>
 </body>
 </html>

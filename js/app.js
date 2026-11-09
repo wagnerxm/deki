@@ -376,7 +376,7 @@
   }
   function closeSheets() { document.querySelectorAll('.sheet').forEach(s => s.hidden = true); }
   function goToday() { App.sel = S.today(); App.view = 'day'; render(); }
-  App.closeSheets = closeSheets; App.goToday = goToday;
+  App.closeSheets = closeSheets; App.goToday = goToday; App.openTask = openTask; App.phaseOf = phaseOf;
 
   /* ===== lembretes e relógio ===== */
   function tick() {
